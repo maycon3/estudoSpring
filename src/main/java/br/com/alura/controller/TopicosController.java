@@ -17,7 +17,6 @@ public class TopicosController {
 	@ResponseBody
 	public List<Topico> list(){
 		Topico topico = new Topico("Duvida", "Duvida no Spring.", new Curso("Spring", "Programação"));
-		
 		return Arrays.asList(topico,topico,topico);
 	}
 }
