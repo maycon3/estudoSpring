@@ -7,10 +7,13 @@ import java.util.Optional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -43,9 +46,10 @@ public class TopicosController {
 	private CursoRepository cursoRepository;
 	//parte dois do curso de java - Ordenação
 	@GetMapping
+	@Cacheable(value = "listaDeTopicos")
 	public Page<TopicoDto> list(@RequestParam(required = false)String nomeCurso,
-					@RequestParam int pagina,@RequestParam int qtd,@RequestParam String ordenacao){
-		Pageable paginacao = PageRequest.of(pagina, qtd,Direction.ASC,ordenacao);
+			@PageableDefault(sort="id", direction = Direction.ASC, page =0, size = 10) Pageable paginacao){
+		
 		if(nomeCurso == null) {
 			Page<Topico> topicos = this.topicoRepository.findAll(paginacao);
 			return TopicoDto.converter(topicos);			
@@ -57,6 +61,7 @@ public class TopicosController {
 	
 	@PostMapping
 	@Transactional
+	@CacheEvict(value ="listaDeTopicos", allEntries = true)
 	public ResponseEntity<TopicoDto> cadastrar(@RequestBody @Valid TopicoForm form, UriComponentsBuilder uriBuilder) {
 		Topico topico = form.converte(cursoRepository);
 		topicoRepository.save(topico);
@@ -75,6 +80,7 @@ public class TopicosController {
 	
 	@PutMapping("/{id}")
 	@Transactional
+	@CacheEvict(value ="listaDeTopicos", allEntries = true)
 	public ResponseEntity<TopicoDto> atualizar(@PathVariable Long id, @RequestBody @Valid AtualizaTopicoForm form){
 		Optional<Topico> optional = topicoRepository.findById(id);
 		if(optional.isPresent()) {
@@ -86,6 +92,7 @@ public class TopicosController {
 	
 	@DeleteMapping("/{id}")
 	@Transactional
+	@CacheEvict(value ="listaDeTopicos", allEntries = true)
 	public ResponseEntity<Void> delete(@PathVariable Long id){
 		Optional<Topico> optional = topicoRepository.findById(id);
 		if(optional.isPresent()) {
